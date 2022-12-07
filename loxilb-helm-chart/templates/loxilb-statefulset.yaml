@@ -32,7 +32,7 @@ spec:
       annotations:
          k8s.v1.cni.cncf.io/networks: '[
                  { "name": "core5g-def",
-                   "ips": [ {{- cat .Values.loxilb.sctpVIP "/" .Values.loxilb.sctpVIPnetMask | nospace | quote }} ] }
+                   "ips": [ {{- cat .Values.loxilb.multusTrafficIP "/" .Values.loxilb.multusTrafficnetMask | nospace | quote }} ] }
          ]'
       labels:
         app: loxilb

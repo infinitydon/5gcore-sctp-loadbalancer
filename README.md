@@ -6,7 +6,7 @@
 - Install kubectl: https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/
 
 
-## Create cluster
+#### Create cluster
 ```
 kind create cluster --config config-3node.yml 
 Creating cluster "kind" ...
@@ -31,7 +31,7 @@ kind-worker          Ready    <none>          7h29m   v1.25.3
 kind-worker2         Ready    <none>          7h29m   v1.25.3
 ```
 
-### Install multus
+#### Install multus
 ```
 kubectl create -f https://github.com/k8snetworkplumbingwg/multus-cni/raw/release-v3/deployments/multus-daemonset.yml
 
@@ -44,7 +44,7 @@ daemonset.apps/kube-multus-ds-amd64 created
 daemonset.apps/kube-multus-ds-ppc64le created
 ```
 
-### Get koko and create veth interface between kind-woker and kind-worker2
+#### Get koko and create veth interface between kind-woker and kind-worker2 (Needed for the multus)
 ```
 curl -LO https://github.com/redhat-nfvpe/koko/releases/download/v0.82/koko_0.82_linux_amd64
   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
@@ -60,7 +60,7 @@ Create veth...done
 
 ***N.B - The koko step should added to boot-up scripts preferrable after Docker starts. Also it needs to be run again if you restart any of the kind docker containers***
 
-### Create namespaces
+#### Create namespaces
 
 ```
 kubectl create ns open5gs
@@ -68,9 +68,7 @@ kubectl create ns loadbalancer
 kubectl create ns ran-simulator
 ```
 
-
-
-### Prep Node for SCTP (Inside the KIND VM)
+#### Prep Node for SCTP (Inside the KIND VM)
 
 ```
 apt-get install libsctp-dev -y
@@ -85,9 +83,7 @@ sctp
 echo Y > /sys/module/sctp/parameters/no_checksums 
 ```
 
-
-
-## Install CNI reference plugin
+#### Install CNI reference plugin
 
 ```
 kubectl create -f cni-install.yml 
@@ -97,7 +93,7 @@ daemonset.apps/install-cni-plugins created
 
 
 
-### Create Multus NAD that will be used by Open5gs, LoxiLB and Simulator
+#### Create Multus NAD that will be used by Open5gs, LoxiLB and Simulator
 
 ```
 - kubectl create -f core-5g-macvlan.yml
@@ -138,7 +134,7 @@ lb5g-0   1/1     Running   0          48m
 
 
 
-### Exec into the my5G-RANTester Pod and initiate gNB/UE
+#### Exec into the my5G-RANTester Pod and initiate gNB/UE
 
 ```
 kubectl -n ran-simulator exec -ti deploy/sim5g-simulator bash
@@ -231,7 +227,7 @@ N.B - To test dataplane traffic, you need to run the following also inside the m
 ip link set dev tunl0 up
 ```
 
-## Exec into the LoxiLB/AMF POD and check status
+#### Exec into the LoxiLB/AMF POD and check status
 
 ```
 root@ebenezer-k8s-loxi:~# kubectl -n loadbalancer exec -ti lb5g-0 bash
