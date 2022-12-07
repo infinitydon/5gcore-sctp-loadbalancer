@@ -1,0 +1,40 @@
+apiVersion: apps/v1 # for versions before 1.9.0 use apps/v1beta2
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-simulator
+  labels:
+    app: ran-tester
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ran-tester
+  template:
+    metadata:
+      annotations:
+         k8s.v1.cni.cncf.io/networks: '[
+                 { "name": "core5g-def",
+                   "ips": [ {{- cat .Values.config.controlDataifIP "/" .Values.config.controlDataifNetMask | nospace | quote }} ] }
+         ]'     
+      labels:
+        mode: simulator
+        app: ran-tester
+    spec:
+      containers:
+      - name: ran
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}        
+        command: ["/bin/sh", "-c"]
+        args:
+        - ip route add {{ .Values.config.amfVIP }} via {{ .Values.config.loxiLBIP }};
+          sleep infinity;
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - name: ran-tester-config
+          mountPath: /workspace/my5G-RANTester/config/config.yml
+          subPath: config.yml
+      volumes:
+        - name: ran-tester-config
+          configMap:
+            name: {{ .Release.Name }}-config

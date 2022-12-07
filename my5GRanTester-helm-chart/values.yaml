@@ -1,0 +1,21 @@
+image:
+    repository: registry.gitlab.com/infinitydon/registry/my5g-ran-tester
+    pullPolicy: IfNotPresent
+    tag: "f652b3d"
+
+config:
+  loxiLBIP: "10.0.3.1"
+  amfVIP: "20.20.20.1"
+  amfPort: "38412"
+  controlDataifIP: "10.0.3.2"
+  controlDataifNetMask: "24"
+  msin: "0000000031"
+  mcc: "208"
+  mnc: "93"
+  tac: "000007"
+  opc: "63bfa50ee6523365ff14c1f45f88737d"
+  key: "0C0A34601D4F07677303652C0462535B"
+  dnn: "internet"
+  sst: "01"
+  sd: "000001"
+

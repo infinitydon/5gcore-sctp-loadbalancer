@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-mongo-ue-init
+  labels:
+    epc-mode: job
+data:
+  ue-init.sh: |
+     wget https://github.com/open5gs/open5gs/raw/main/misc/db/open5gs-dbctl
+     chmod +x open5gs-dbctl
+     if ./open5gs-dbctl --db_uri=mongodb://{{ .Release.Name }}-mongodb-svc/open5gs showfiltered | grep -w {{ .Values.simulator.ue1.imsi }}; then
+          echo "UE {{ .Values.simulator.ue1.imsi }} exists, proceeding to delete"
+          ./open5gs-dbctl --db_uri=mongodb://{{ .Release.Name }}-mongodb-svc/open5gs remove {{ .Values.simulator.ue1.imsi }}
+          ./open5gs-dbctl --db_uri=mongodb://{{ .Release.Name }}-mongodb-svc/open5gs add_ue_with_slice {{ .Values.simulator.ue1.imsi }} {{ .Values.simulator.ue1.secKey }} {{ .Values.simulator.ue1.op }} {{ .Values.dnn }} {{ .Values.simulator.ue1.sst }} {{ .Values.simulator.ue1.sd }};
+     else
+          echo "UE {{ .Values.simulator.ue1.imsi }} does not exist in the DB, proceeding to add it"
+          ./open5gs-dbctl --db_uri=mongodb://{{ .Release.Name }}-mongodb-svc/open5gs add_ue_with_slice {{ .Values.simulator.ue1.imsi }} {{ .Values.simulator.ue1.secKey }} {{ .Values.simulator.ue1.op }} {{ .Values.dnn }} {{ .Values.simulator.ue1.sst }} {{ .Values.simulator.ue1.sd }};
+     fi
+     
+     if ./open5gs-dbctl --db_uri=mongodb://{{ .Release.Name }}-mongodb-svc/open5gs showfiltered | grep -w {{ .Values.simulator.ue2.imsi }}; then
+          echo "UE {{ .Values.simulator.ue2.imsi }} exists, proceeding to delete"
+          ./open5gs-dbctl --db_uri=mongodb://{{ .Release.Name }}-mongodb-svc/open5gs remove {{ .Values.simulator.ue2.imsi }}    
+          ./open5gs-dbctl --db_uri=mongodb://{{ .Release.Name }}-mongodb-svc/open5gs add_ue_with_slice {{ .Values.simulator.ue2.imsi }} {{ .Values.simulator.ue2.secKey }} {{ .Values.simulator.ue2.op }} {{ .Values.dnn }} {{ .Values.simulator.ue2.sst }} {{ .Values.simulator.ue2.sd }};
+     else
+          echo "UE {{ .Values.simulator.ue2.imsi }} does not exist in the DB, proceeding to add it"
+          ./open5gs-dbctl --db_uri=mongodb://{{ .Release.Name }}-mongodb-svc/open5gs add_ue_with_slice {{ .Values.simulator.ue2.imsi }} {{ .Values.simulator.ue2.secKey }} {{ .Values.simulator.ue2.op }} {{ .Values.dnn }} {{ .Values.simulator.ue2.sst }} {{ .Values.simulator.ue2.sd }};
+     fi

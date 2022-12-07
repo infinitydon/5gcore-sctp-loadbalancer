@@ -1,0 +1,57 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-udr
+  labels:
+    epc-mode: udr
+spec:
+  selector:
+    epc-mode: udr
+  ports:
+    - protocol: TCP
+      port: 80   
+      targetPort: 80
+---  
+apiVersion: apps/v1 # for versions before 1.9.0 use apps/v1beta2
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-udr-deployment
+  labels:
+    epc-mode: udr
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      epc-mode: udr
+  template:
+    metadata:
+      labels:
+        epc-mode: udr
+    spec:
+      serviceAccountName: {{ .Release.Name }}-k8s-wait-for
+      initContainers:      
+      - name: wait-for-nrf
+        image: "{{ .Values.k8swait.repository }}:{{ .Values.k8swait.tag }}"
+        imagePullPolicy: {{ .Values.k8swait.pullPolicy }}
+        args:
+          - "pod"
+          - "-lepc-mode=nrf"
+      - name: wait-for-webui
+        image: "{{ .Values.k8swait.repository }}:{{ .Values.k8swait.tag }}"
+        imagePullPolicy: {{ .Values.k8swait.pullPolicy }}
+        args:
+          - "pod"
+          - "-lepc-mode=webui"                
+      containers:
+        - name: udr
+          image: "{{ .Values.open5gs.image.repository }}:{{ .Values.open5gs.image.tag }}"
+          imagePullPolicy: {{ .Values.open5gs.image.pullPolicy }}
+          command: ["open5gs-udrd", "-c", "/open5gs/config-map/udr.yaml"]
+          volumeMounts:
+          - name: {{ .Release.Name }}-udr-config
+            mountPath: /open5gs/config-map/udr.yaml
+            subPath: "udr.yaml"    
+      volumes:
+        - name: {{ .Release.Name }}-udr-config
+          configMap:
+            name: {{ .Release.Name }}-udr-config           

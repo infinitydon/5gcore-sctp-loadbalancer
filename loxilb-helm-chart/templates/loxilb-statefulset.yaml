@@ -1,0 +1,54 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}
+  labels:
+    app: loxilb
+spec:
+  ports:
+  - port: 8091
+    name: restapi-one
+  - port: 11111
+    name: restapi-two    
+  clusterIP: None
+  selector:
+    app: loxilb
+---    
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    app: loxilb
+  name: {{ .Release.Name }}
+spec:
+  serviceName: {{ .Release.Name }}
+  podManagementPolicy: Parallel
+  replicas: 1
+  selector:
+    matchLabels:
+      app: loxilb
+  template:
+    metadata:
+      annotations:
+         k8s.v1.cni.cncf.io/networks: '[
+                 { "name": "core5g-def",
+                   "ips": [ {{- cat .Values.loxilb.sctpVIP "/" .Values.loxilb.sctpVIPnetMask | nospace | quote }} ] }
+         ]'
+      labels:
+        app: loxilb
+    spec:        
+      containers:
+      - name: loxilb
+        image: "{{ .Values.loxilb.image.repository }}:{{ .Values.loxilb.image.tag }}"
+        imagePullPolicy: {{ .Values.loxilb.image.pullPolicy }}
+        lifecycle:
+          postStart:
+            exec:
+              command: [ "/bin/sh","-c","sleep 10; for i in /proc/sys/net/ipv4/conf/*/rp_filter; do echo 0 > $i; done; {{ .Values.loxilb.clientStartCmd }}" ]
+        ports:
+        - containerPort: 8091
+          name: restapi-one
+        - containerPort: 11111
+          name: restapi-two           
+        securityContext:
+          privileged: true

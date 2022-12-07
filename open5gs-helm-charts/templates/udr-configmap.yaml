@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-udr-config
+  labels:
+    epc-mode: udr
+data:
+  udr.yaml: |
+    logger:
+        file: /var/log/open5gs/udr.log
+
+    db_uri: mongodb://{{ .Release.Name }}-mongodb-svc/open5gs
+    udr:
+      sbi:
+      - addr: 0.0.0.0
+        advertise: {{ .Release.Name }}-udr
+    nrf:
+     sbi:
+      name: {{ .Release.Name }}-nrf  

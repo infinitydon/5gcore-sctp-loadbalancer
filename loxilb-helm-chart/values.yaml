@@ -1,0 +1,9 @@
+loxilb:
+  sctpVIP: "10.0.3.1"
+  sctpVIPnetMask: "24"
+  image:
+    repository: ghcr.io/loxilb-io/loxilb
+    pullPolicy: IfNotPresent
+    tag: "latest"
+  clientStartCmd: "loxicmd create lb 20.20.20.1 --sctp=38412:38412 --endpoints=10.0.3.3:1,10.0.3.4:1 --mode=onearm"
+  

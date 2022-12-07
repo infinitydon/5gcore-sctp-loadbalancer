@@ -1,0 +1,91 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-upf-svc
+  labels:
+    epc-mode: upf
+spec:
+  selector:
+    epc-mode: upf
+  ports:
+    - protocol: UDP
+      port: 8805
+      targetPort: 8805    
+---  
+apiVersion: apps/v1 # for versions before 1.9.0 use apps/v1beta2
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-upf-deployment
+  labels:
+    epc-mode: upf
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      epc-mode: upf
+  template:
+    metadata:
+      annotations:
+         k8s.v1.cni.cncf.io/networks: '[
+                 { "name": "core5g-def",
+                   "ips": [ {{- cat .Values.upf.multusN3N4IP "/" .Values.upf.multusN3N4NetworkMask | nospace | quote }} ] }
+         ]'  
+      labels:
+        epc-mode: upf
+        epc-prom: enabled
+    spec:  
+      containers:
+        - name: prometheus-sidecar
+          image: "{{ .Values.prometheus.nodeExporter.repository }}:{{ .Values.prometheus.nodeExporter.tag }}"
+          imagePullPolicy: {{ .Values.prometheus.nodeExporter.pullPolicy }}
+          args:
+          - --web.listen-address=:9090
+          - --collector.disable-defaults
+          - --collector.netdev
+          - --collector.netclass
+          - --collector.netstat
+          ports:
+          - containerPort: 9090
+            name: prom
+            protocol: TCP
+          resources:
+            requests:
+              memory: 1G
+              cpu: 0.5
+            limits:
+              memory: 1G
+              cpu: 1                
+        - name: upf
+          image: "{{ .Values.open5gs.image.repository }}:{{ .Values.open5gs.image.tag }}"
+          imagePullPolicy: {{ .Values.open5gs.image.pullPolicy }}
+          command: ["/bin/sh", "-c"]
+          args:
+          - apt-get update;
+            apt-get install tcpdump iputils-ping iperf3 -y;
+            ip tuntap add name ogstun mode tun;
+            ip addr add 10.45.0.1/16 dev ogstun;
+            sysctl -w net.ipv6.conf.all.disable_ipv6=1;
+            ip link set ogstun up;
+            sh -c "echo 1 > /proc/sys/net/ipv4/ip_forward";            
+            iptables -t nat -A POSTROUTING -s 10.45.0.0/16 ! -o ogstun -j MASQUERADE;          
+            open5gs-upfd -c /open5gs/config-map/upf.yaml;
+          volumeMounts:
+          - name: {{ .Release.Name }}-upf-config
+            mountPath: /open5gs/config-map/upf.yaml
+            subPath: "upf.yaml"
+          - mountPath: /dev/net/tun
+            name: dev-net-tun           
+          securityContext:
+             capabilities:
+               add:
+               - NET_ADMIN                     
+      {{- if .Values.upf.nodeSelector}}
+      nodeSelector: {{- .Values.upf.nodeSelector | toYaml | nindent 8 }}
+      {{- end }}
+      volumes:
+        - name: {{ .Release.Name }}-upf-config
+          configMap:
+            name: {{ .Release.Name }}-upf-config
+        - name: dev-net-tun
+          hostPath:
+            path: /dev/net/tun

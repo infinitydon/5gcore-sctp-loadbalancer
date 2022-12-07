@@ -1,0 +1,85 @@
+#apiVersion: v1
+#kind: Service
+#metadata:
+#  name: amf-open5gs-sctp
+#  labels:
+#    epc-mode: amf
+#spec:
+#  type: NodePort
+#  selector:
+#    epc-mode: amf
+#  ports:
+#    - protocol: SCTP
+#      port: 38412
+#      targetPort: 38412
+#      nodePort: 30412
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-amf-1
+  labels:
+    epc-mode: amf-1
+spec:
+  selector:
+    epc-mode: amf-1
+  ports:
+    - protocol: TCP
+      port: 80   
+      targetPort: 80      
+---  
+apiVersion: apps/v1 # for versions before 1.9.0 use apps/v1beta2
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-amf-1-deployment
+  labels:
+    epc-mode: amf-1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      epc-mode: amf-1
+  template:
+    metadata:
+      annotations:
+         k8s.v1.cni.cncf.io/networks: '[
+                 { "name": "core5g-def",
+                   "ips": [ {{- cat .Values.amf1.multusN2IP "/" .Values.amf1.multusN2NetworkMask | nospace | quote }} ] }
+         ]'   
+      labels:
+        epc-mode: amf-1
+        epc-prom: enabled
+    spec:
+      serviceAccountName: {{ .Release.Name }}-k8s-wait-for
+      initContainers:    
+      - name: wait-for-nrf
+        image: "{{ .Values.k8swait.repository }}:{{ .Values.k8swait.tag }}"
+        imagePullPolicy: {{ .Values.k8swait.pullPolicy }}
+        args:
+          - "pod"
+          - "-lepc-mode=nrf"
+      containers:
+        - name: amf
+          image: "{{ .Values.open5gs.image.repository }}:{{ .Values.open5gs.image.tag }}"
+          imagePullPolicy: {{ .Values.open5gs.image.pullPolicy }}
+          ports:
+          - containerPort: 9090
+            name: prom
+            protocol: TCP
+          command: ["/bin/sh", "-c"]
+          args:
+          - apt-get update;
+            apt-get install tcpdump iputils-ping -y;
+            open5gs-amfd -c /open5gs/config-map/amf.yaml;          
+          securityContext:
+             capabilities:
+               add:
+               - NET_ADMIN
+          volumeMounts:
+          - name: {{ .Release.Name }}-amf-config
+            mountPath: /open5gs/config-map/amf.yaml
+            subPath: "amf.yaml" 
+      volumes:
+        - name: {{ .Release.Name }}-amf-config
+          configMap:
+            name: {{ .Release.Name }}-amf-1-config

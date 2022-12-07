@@ -1,0 +1,51 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-config
+  labels:
+    app: rantester
+data:
+  config.yml: |
+    gnodeb:
+      controlif:
+        ip: "{{ .Values.config.controlDataifIP }}"
+        port: 9487
+      dataif:
+        ip: "{{ .Values.config.controlDataifIP }}"
+        port: 2152
+      plmnlist:
+        mcc: "{{ .Values.config.mcc }}"
+        mnc: "{{ .Values.config.mnc }}"
+        tac: "{{ .Values.config.tac }}"
+        gnbid: "0000001"
+      slicesupportlist:
+        sst: "{{ .Values.config.sst }}"
+        sd: "{{ .Values.config.sd }}"
+
+    ue:
+      msin: "{{ .Values.config.msin }}"
+      key: "{{ .Values.config.key }}"
+      opc: "{{ .Values.config.opc }}"
+      amf: "8000"
+      sqn: "0000000"
+      dnn: "{{ .Values.config.dnn }}"
+      hplmn:
+        mcc: "{{ .Values.config.mcc }}"
+        mnc: "{{ .Values.config.mnc }}"
+      snssai:
+        sst: {{ .Values.config.sst }}
+        sd: "{{ .Values.config.sd }}"
+      integrity:
+        nia0: false
+        nia1: false
+        nia2: true
+      ciphering:
+        nea0: true
+        nea1: false
+        nea2: false
+    amfif:
+      ip: "{{ .Values.config.amfVIP }}"
+      port: {{ .Values.config.amfPort }}
+
+    logs:
+        level: 4

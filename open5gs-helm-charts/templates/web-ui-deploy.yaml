@@ -1,0 +1,49 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-webui
+  labels:
+    epc-mode: webui
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: 3000
+  selector:
+    epc-mode: webui
+---
+apiVersion: apps/v1 # for versions before 1.9.0 use apps/v1beta2
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-webui 
+  labels:
+    epc-mode: webui
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      epc-mode: webui
+  template:
+    metadata:
+      labels:
+        epc-mode: webui
+    spec:
+      serviceAccountName: {{ .Release.Name }}-k8s-wait-for
+      initContainers:     
+      - name: wait-for-nrf
+        image: "{{ .Values.k8swait.repository }}:{{ .Values.k8swait.tag }}"
+        imagePullPolicy: {{ .Values.k8swait.pullPolicy }}
+        args:
+          - "pod"
+          - "-lepc-mode=nrf"    
+      containers:
+      - name: webui
+        imagePullPolicy: {{ .Values.webui.image.pullPolicy }}
+        image: "{{ .Values.webui.image.repository }}:{{ .Values.webui.image.tag }}"       
+        env:
+        - name: DB_URI
+          value: mongodb://{{ .Release.Name }}-mongodb-svc/open5gs
+        - name: NODE_ENV
+          value: "production"  
+        - name: HOSTNAME
+          value: '0.0.0.0'          
