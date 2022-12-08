@@ -1,5 +1,5 @@
-# 5gcore-sctp-loadbalancer
-5G Core using an LoxiLB SCTP load balancer
+# 5gcore-sctp-loadbalancer Using LoxiLB
+![5G-sctp-loadbalancer](./images/5G-sctp-loadbalancer.png)
 
 - Install docker:  https://docs.docker.com/engine/install/ubuntu/
 - Install kind: https://kind.sigs.k8s.io/docs/user/quick-start/#installing-from-release-binaries
