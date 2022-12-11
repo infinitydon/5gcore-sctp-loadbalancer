@@ -1,0 +1,66 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: lb-backup-svc
+  labels:
+    app: loxilb-backup
+spec:
+  ports:
+  - port: 8091
+    name: restapi-one
+  - port: 11111
+    name: restapi-two
+  clusterIP: None
+  selector:
+    app: loxilb-backup
+---    
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    app: loxilb-backup
+  name: lb-backup
+spec:
+  serviceName: lb-backup-svc
+  podManagementPolicy: Parallel
+  replicas: 1
+  selector:
+    matchLabels:
+      app: loxilb-backup
+  template:
+    metadata:
+      annotations:
+         k8s.v1.cni.cncf.io/networks: '[
+                 { "name": "core5g-def",
+                   "ips": [ {{- cat .Values.loxilb.multusTrafficIPloxiLBBackup "/" .Values.loxilb.multusTrafficnetMask | nospace | quote }} ] }
+         ]'
+      labels:
+        app: loxilb-backup
+    spec:        
+      containers:
+      - name: loxilb
+        image: "{{ .Values.loxilb.image.repository }}:{{ .Values.loxilb.image.tag }}"
+        imagePullPolicy: {{ .Values.loxilb.image.pullPolicy }}
+        #command: ["/root/loxilb-io/loxilb/loxilb"]
+        args: ["-b"]
+        lifecycle:
+          postStart:
+            exec:
+              command: [ "/bin/sh","-c","sleep 10; for i in /proc/sys/net/ipv4/conf/*/rp_filter; do echo 0 > $i; done; {{ .Values.loxilb.clientStartCmdBackup }}" ]
+        ports:
+        - containerPort: 8091
+          name: restapi-one
+        - containerPort: 11111
+          name: restapi-two           
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - name: router-config
+          mountPath: /etc/gobgp/gobgp_loxilb.yaml
+          subPath: gobgp_loxilb.yaml
+      volumes:
+        - name: router-config
+          configMap:
+            name: {{ .Release.Name }}-gpbgp-config-backup
+      nodeSelector:
+        kubernetes.io/hostname: kind-worker2

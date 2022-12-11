@@ -1,0 +1,60 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: frr-svc
+  labels:
+    app: frr-router
+spec:
+  ports:
+  - port: 179
+    name: bgp   
+  clusterIP: None
+  selector:
+    app: frr-router
+---    
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    app: frr-router
+  name: frr-router
+spec:
+  serviceName: frr-svc
+  podManagementPolicy: Parallel
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frr-router
+  template:
+    metadata:
+      annotations:
+         k8s.v1.cni.cncf.io/networks: '[
+                 { "name": "core5g-def",
+                   "ips": [ {{- cat .Values.bgp.frrIP "/" .Values.bgp.frrNetMask | nospace | quote }} ] }
+         ]'
+      labels:
+        app: frr-router
+    spec:        
+      containers:
+      - name: frr
+        image: "{{ .Values.frr.image.repository }}:{{ .Values.frr.image.tag }}"
+        imagePullPolicy: {{ .Values.frr.image.pullPolicy }}
+        command: ["/bin/sh", "-c"]
+        args:
+        - touch /etc/frr/vtysh.conf;
+          sed -i 's/bgpd=no/bgpd=yes/g' /etc/frr/daemons;
+          /usr/bin/tini --;
+          /usr/lib/frr/docker-start        
+        ports:
+        - containerPort: 179
+          name: bgp       
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - name: router-config
+          mountPath: /etc/frr/frr.conf
+          subPath: "frr.conf"
+      volumes:
+        - name: router-config
+          configMap:
+            name: {{ .Release.Name }}-frr-config

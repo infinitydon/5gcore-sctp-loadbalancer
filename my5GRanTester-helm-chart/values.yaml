@@ -4,10 +4,10 @@ image:
     tag: "f652b3d"
 
 config:
-  loxiLBIP: "10.0.3.1"
+  frrGWIP: "10.0.3.3"
   amfVIP: "20.20.20.1"
   amfPort: "38412"
-  controlDataifIP: "10.0.3.2"
+  controlDataifIP: "10.0.3.4"
   controlDataifNetMask: "24"
   msin: "0000000031"
   mcc: "208"

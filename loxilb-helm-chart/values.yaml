@@ -1,9 +1,22 @@
 loxilb:
-  multusTrafficIP: "10.0.3.1"
+  multusTrafficIPloxiLBMain: "10.0.3.1"
+  multusTrafficIPloxiLBBackup: "10.0.3.2"
   multusTrafficnetMask: "24"
   image:
     repository: ghcr.io/loxilb-io/loxilb
     pullPolicy: IfNotPresent
     tag: "latest"
-  clientStartCmd: "loxicmd create lb 20.20.20.1 --sctp=38412:38412 --endpoints=10.0.3.3:1,10.0.3.4:1 --mode=onearm"
-  
+  clientStartCmdMain: "loxicmd create lb 20.20.20.1 --sctp=38412:38412 --endpoints=10.0.3.5:1,10.0.3.6:1 --mode=onearm; gobgp global rib add 20.20.20.1/32 -a ipv4 med 10"
+  clientStartCmdBackup: "loxicmd create lb 20.20.20.1 --sctp=38412:38412 --endpoints=10.0.3.5:1,10.0.3.6:1 --mode=onearm; gobgp global rib add 20.20.20.1/32 -a ipv4 med 20"
+
+bgp:
+  loxilbLocalAS: "64512"
+  frrIP: "10.0.3.3"
+  frrNetMask: "24"
+  frrAS: "64512"
+
+frr:
+  image:
+    repository: frrouting/frr
+    pullPolicy: IfNotPresent
+    tag: "v8.0.1"  

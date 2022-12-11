@@ -26,7 +26,7 @@ spec:
         imagePullPolicy: {{ .Values.image.pullPolicy }}        
         command: ["/bin/sh", "-c"]
         args:
-        - ip route add {{ .Values.config.amfVIP }} via {{ .Values.config.loxiLBIP }};
+        - ip route add {{ .Values.config.amfVIP }} via {{ .Values.config.frrGWIP }};
           sleep infinity;
         securityContext:
           privileged: true

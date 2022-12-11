@@ -54,7 +54,7 @@ amf1:
   tac: 7
   networkName: Open5GS
   ngapInt: net1
-  multusN2IP: 10.0.3.3
+  multusN2IP: 10.0.3.5
   multusN2NetworkMask: 24
 
 amf2:
@@ -63,17 +63,17 @@ amf2:
   tac: 7
   networkName: Open5GS
   ngapInt: net1
-  multusN2IP: 10.0.3.4
+  multusN2IP: 10.0.3.6
   multusN2NetworkMask: 24
 
 smf:
   N4Int: net1
-  multusN4IP: 10.0.3.5
+  multusN4IP: 10.0.3.7
   multusN4NetworkMask: 24
 
 upf:
   N3N4Int: net1
-  multusN3N4IP: 10.0.3.6
+  multusN3N4IP: 10.0.3.8
   multusN3N4NetworkMask: 24
   multusN3N4GW: 10.0.3.1
 

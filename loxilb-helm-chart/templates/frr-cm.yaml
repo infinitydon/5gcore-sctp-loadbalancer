@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-frr-config
+  labels:
+    app: frr-router
+data:
+  frr.conf: |
+      router bgp {{ .Values.bgp.frrAS }}
+       neighbor {{ .Values.loxilb.multusTrafficIPloxiLBMain }} remote-as {{ .Values.bgp.loxilbLocalAS }}
+       neighbor {{ .Values.loxilb.multusTrafficIPloxiLBBackup }} remote-as {{ .Values.bgp.loxilbLocalAS }}     
+      !
+      line vty
+      !
+      end

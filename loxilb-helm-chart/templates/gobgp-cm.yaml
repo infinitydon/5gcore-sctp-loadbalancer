@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-gpbgp-config-main
+  labels:
+    app: gobp-router
+data:
+  gobgp_loxilb.yaml: |
+    global:
+        config:
+            as: {{ .Values.bgp.loxilbLocalAS }}
+            router-id: {{ .Values.loxilb.multusTrafficIPloxiLBMain }}
+    neighbors:
+        - config:
+            neighbor-address: {{ .Values.bgp.frrIP }}
+            peer-as: {{ .Values.bgp.frrAS }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-gpbgp-config-backup
+  labels:
+    app: gobp-router
+data:
+  gobgp_loxilb.yaml: |
+    global:
+        config:
+            as: {{ .Values.bgp.loxilbLocalAS }}
+            router-id: {{ .Values.loxilb.multusTrafficIPloxiLBBackup }}
+    neighbors:
+        - config:
+            neighbor-address: {{ .Values.bgp.frrIP }}
+            peer-as: {{ .Values.bgp.frrAS }}              
