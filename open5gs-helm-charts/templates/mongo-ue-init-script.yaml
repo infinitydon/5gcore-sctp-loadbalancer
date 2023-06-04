@@ -6,7 +6,7 @@ metadata:
     epc-mode: job
 data:
   ue-init.sh: |
-     wget https://github.com/open5gs/open5gs/raw/main/misc/db/open5gs-dbctl
+     wget https://github.com/open5gs/open5gs/raw/v2.5.6/misc/db/open5gs-dbctl
      chmod +x open5gs-dbctl
      if ./open5gs-dbctl --db_uri=mongodb://{{ .Release.Name }}-mongodb-svc/open5gs showfiltered | grep -w {{ .Values.simulator.ue1.imsi }}; then
           echo "UE {{ .Values.simulator.ue1.imsi }} exists, proceeding to delete"
