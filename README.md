@@ -33,7 +33,7 @@ kind-worker2         Ready    <none>          7h29m   v1.25.3
 
 #### Install multus
 ```
-kubectl create -f https://github.com/k8snetworkplumbingwg/multus-cni/raw/release-v3/deployments/multus-daemonset.yml
+kubectl create -f multus-daemonset.yml
 
 customresourcedefinition.apiextensions.k8s.io/network-attachment-definitions.k8s.cni.cncf.io created
 clusterrole.rbac.authorization.k8s.io/multus created
