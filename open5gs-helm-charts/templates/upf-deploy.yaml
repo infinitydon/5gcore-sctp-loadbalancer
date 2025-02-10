@@ -76,9 +76,7 @@ spec:
           - mountPath: /dev/net/tun
             name: dev-net-tun           
           securityContext:
-             capabilities:
-               add:
-               - NET_ADMIN                     
+             privileged: true                     
       {{- if .Values.upf.nodeSelector}}
       nodeSelector: {{- .Values.upf.nodeSelector | toYaml | nindent 8 }}
       {{- end }}
